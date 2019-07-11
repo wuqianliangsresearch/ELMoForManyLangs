@@ -108,7 +108,7 @@ def create_one_batch(x, word2id, char2id, config, oov='<oov>', pad='<pad>', sort
     batch_w = None
 
   if char2id is not None:
-    bow_id, eow_id, oov_id, pad_id = char2id.get('<eow>', None), char2id.get('<bow>', None), char2id.get(oov, None), char2id.get(pad, None)
+    bow_id, eow_id, oov_id, pad_id = char2id.get('<bow>', None), char2id.get('<eow>', None),  char2id.get(oov, None), char2id.get(pad, None)
 
     assert bow_id is not None and eow_id is not None and oov_id is not None and pad_id is not None
 
