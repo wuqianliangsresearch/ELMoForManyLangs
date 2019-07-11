@@ -82,12 +82,14 @@ class ConvTokenEmbedder(nn.Module):
       self.n_highway = cnn_config['n_highway']
 
       self.highways = Highway(self.n_filters, self.n_highway, activation=torch.nn.functional.relu)
+      # WORD DIM 100 + 2048
       self.emb_dim += self.n_filters
 
     self.projection = nn.Linear(self.emb_dim, self.output_dim, bias=True)
     
   def forward(self, word_inp, chars_inp, shape):
     embs = []
+    # shape of mask[0]
     batch_size, seq_len = shape
     if self.word_emb_layer is not None:
       batch_size, seq_len = word_inp.size(0), word_inp.size(1)

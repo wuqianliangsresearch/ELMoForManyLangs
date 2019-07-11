@@ -59,8 +59,8 @@ def read_corpus(path, max_chars=None, max_sent_len=20):
   """
   read raw text file
   :param path: str
-  :param max_chars: int
-  :param max_sent_len: int
+  :param max_chars: int  50 default
+  :param max_sent_len: int 句子长度
   :return:
   """
   data = []
@@ -95,6 +95,8 @@ def create_one_batch(x, word2id, char2id, config, oov='<oov>', pad='<pad>', sort
 
   x = [x[i] for i in lst]
   lens = [len(x[i]) for i in lst]
+  
+  # 当前BATCH里面最长的句子
   max_len = max(lens)
 
   if word2id is not None:
@@ -127,6 +129,7 @@ def create_one_batch(x, word2id, char2id, config, oov='<oov>', pad='<pad>', sort
           batch_c[i][j][1] = char2id.get(x_ij)
           batch_c[i][j][2] = eow_id
         else:
+          # 对每个词
           for k, c in enumerate(x_ij):
             batch_c[i][j][k + 1] = char2id.get(c, oov_id)
           batch_c[i][j][len(x_ij) + 1] = eow_id
@@ -135,14 +138,19 @@ def create_one_batch(x, word2id, char2id, config, oov='<oov>', pad='<pad>', sort
 
   masks = [torch.LongTensor(batch_size, max_len).fill_(0), [], []]
 
+  # 整体 mask  
+  # masks[1]  : forward output mask
+  # masks[2] : backward output mask
+  # mask[0] 进行 padding 位置剔除的 里面非0 的下标。
   for i, x_i in enumerate(x):
     for j in range(len(x_i)):
       masks[0][i][j] = 1
-      if j + 1 < len(x_i):
+      if j < len(x_i)-1:
         masks[1].append(i * max_len + j)
       if j > 0: 
         masks[2].append(i * max_len + j)
-
+        
+ 
   assert len(masks[1]) <= batch_size * max_len
   assert len(masks[2]) <= batch_size * max_len
 
@@ -156,7 +164,7 @@ def create_one_batch(x, word2id, char2id, config, oov='<oov>', pad='<pad>', sort
 def create_batches(x, batch_size, word2id, char2id, config, perm=None, shuffle=True, sort=True, use_cuda=False):
   """
 
-  :param x:
+  :param x: traindata
   :param batch_size:
   :param word2id:
   :param char2id:
@@ -167,13 +175,14 @@ def create_batches(x, batch_size, word2id, char2id, config, perm=None, shuffle=T
   :param use_cuda:
   :return:
   """
+  # 获取下标
   lst = perm or list(range(len(x)))
   if shuffle:
     random.shuffle(lst)
-
+  # 根据句子长度排序
   if sort:
     lst.sort(key=lambda l: -len(x[l]))
-
+  # 按长度排序好的句子
   x = [x[i] for i in lst]
 
   sum_len = 0.0
